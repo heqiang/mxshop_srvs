@@ -1,0 +1,15 @@
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  user: "root"
+  password: "142212"
+  db: "mxshop_user_srv"
+log:
+  level: "debug"
+  filename: "web_app_log.log"
+  max_size: 200
+  max_age: 30
+  max_backups: 7
+consul:
+  host: "127.0.0.1"
+  port: 8500
