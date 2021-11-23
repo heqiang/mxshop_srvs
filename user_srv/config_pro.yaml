@@ -12,5 +12,6 @@ log:
   max_age: 30
   max_backups: 7
 consul:
-  host: "192.168.31.101"
+  host: "127.0.0.1"
   port: 8500
+  serverhost: "192.168.31.101"

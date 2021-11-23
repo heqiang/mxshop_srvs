@@ -18,22 +18,21 @@ import (
 )
 
 func main() {
-	IP := flag.String("ip", "192.168.31.101", "ip地址")
-	Port := flag.Int("port", 0, "端口")
-
-	flag.Parse()
 	initlialize.InitConfig()
 	initlialize.Initdb()
-	initlialize.Initlogger(global.ServerConfig.LogConfig)
-	zap.L().Info("")
+	//initlialize.Initlogger(global.ServerConfig.LogConfig)
+	initlialize.Initlogger()
+
+	IP := flag.String("ip", global.ServerConfig.ConsulConfig.ServerHost, "ip地址")
+	Port := flag.Int("port", 0, "端口")
+	flag.Parse()
+	if *Port == 0 {
+		*Port, _ = utils.GetFreePort()
+	}
 	server, err := net.Listen("tcp", fmt.Sprintf("%s:%d", *IP, *Port))
 	if err != nil {
 		panic(err)
 	}
-	if *Port == 0 {
-		*Port, _ = utils.GetFreePort()
-	}
-
 	zap.L().Info(fmt.Sprintf("服务监听地址为：%s:%d", *IP, *Port))
 	g := grpc.NewServer()
 	proto.RegisterUserServer(g, &handle.UserService{})
@@ -49,26 +48,24 @@ func main() {
 		panic(err)
 	}
 
-	check := &consulapi.AgentServiceCheck{
-		GRPC:                           "https://www.baidu.com",
-		Timeout:                        "5s",
-		Interval:                       "5s",
-		DeregisterCriticalServiceAfter: "10s",
-		Notes:                          "健康检查",
-	}
 	registeration := &consulapi.AgentServiceRegistration{
 		Name:    global.ServerConfig.Name,
 		ID:      global.ServerConfig.Name,
 		Port:    *Port,
 		Tags:    []string{"hq", "srv"},
-		Address: global.ServerConfig.ConsulConfig.Host,
-		Check:   check,
+		Address: global.ServerConfig.ConsulConfig.ServerHost,
+		Check: &consulapi.AgentServiceCheck{
+			GRPC:                           fmt.Sprintf("%s:%d", global.ServerConfig.ConsulConfig.ServerHost, *Port),
+			Timeout:                        "5s",
+			Interval:                       "5s",
+			DeregisterCriticalServiceAfter: "10s",
+			Notes:                          "健康检查",
+		},
 	}
 	err = client.Agent().ServiceRegister(registeration)
 	if err != nil {
 		panic(err)
 	}
-	zap.L().Info(fmt.Sprintf("注册的grpc服务地址为=>%s:%d", global.ServerConfig.ConsulConfig.Host, global.ServerConfig.ConsulConfig.Port))
 	err = g.Serve(server)
 	if err != nil {
 		return

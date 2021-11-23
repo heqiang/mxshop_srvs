@@ -17,8 +17,9 @@ type LogConfig struct {
 	MaxBackups int    `mapstructure:"max_backups"`
 }
 type ConsulConfig struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
+	Host       string `mapstructure:"host"`
+	Port       int    `mapstructure:"port"`
+	ServerHost string `mapstructure:"serverhost"`
 }
 type ServerConfig struct {
 	Name          string `mapstructure:"name"`

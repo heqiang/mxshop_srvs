@@ -1,53 +1,55 @@
 package initlialize
 
-import (
-	"github.com/natefinch/lumberjack"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"mxshop_srvs/user_srv/config"
-	"os"
-)
+import "go.uber.org/zap"
 
-func Initlogger(conf *config.LogConfig) {
-	writeSyncer := getLogWriter(conf.FileName, conf.MaxSize, conf.MaxBackups, conf.MaxAge)
-	encoder := getEncoder()
-	var l = new(zapcore.Level)
-	err := l.UnmarshalText([]byte(conf.Level))
+func Initlogger() {
+	logger, err := zap.NewProduction()
 	if err != nil {
-		return
+		panic(err)
 	}
-	var core zapcore.Core
-	if conf.Level == "dev" {
-		consoleEncoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
-		core = zapcore.NewTee(
-			zapcore.NewCore(encoder, writeSyncer, l),
-			zapcore.NewCore(consoleEncoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel),
-		)
-	} else {
-		core = zapcore.NewCore(encoder, writeSyncer, l)
-	}
-
-	lg := zap.New(core, zap.AddCaller())
-	zap.ReplaceGlobals(lg) // 替换zap包中全局的logger实例，后续在其他包中只需使用zap.L()调用即可
-	return
+	zap.ReplaceGlobals(logger)
 }
 
-func getEncoder() zapcore.Encoder {
-	encoderConfig := zap.NewProductionEncoderConfig()
-	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	encoderConfig.TimeKey = "time"
-	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
-	encoderConfig.EncodeDuration = zapcore.SecondsDurationEncoder
-	encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
-	return zapcore.NewJSONEncoder(encoderConfig)
-}
-
-func getLogWriter(filename string, maxSize, maxBackup, maxAge int) zapcore.WriteSyncer {
-	lumberJackLogger := &lumberjack.Logger{
-		Filename:   filename,
-		MaxSize:    maxSize,
-		MaxBackups: maxBackup,
-		MaxAge:     maxAge,
-	}
-	return zapcore.AddSync(lumberJackLogger)
-}
+//func Initlogger(conf *config.LogConfig) {
+//	writeSyncer := getLogWriter(conf.FileName, conf.MaxSize, conf.MaxBackups, conf.MaxAge)
+//	encoder := getEncoder()
+//	var l = new(zapcore.Level)
+//	err := l.UnmarshalText([]byte(conf.Level))
+//	if err != nil {
+//		return
+//	}
+//	var core zapcore.Core
+//	if conf.Level == "dev" {
+//		consoleEncoder := zapcore.NewConsoleEncoder(zap.NewDevelopmentEncoderConfig())
+//		core = zapcore.NewTee(
+//			zapcore.NewCore(encoder, writeSyncer, l),
+//			zapcore.NewCore(consoleEncoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel),
+//		)
+//	} else {
+//		core = zapcore.NewCore(encoder, writeSyncer, l)
+//	}
+//
+//	lg := zap.New(core, zap.AddCaller())
+//	zap.ReplaceGlobals(lg) // 替换zap包中全局的logger实例，后续在其他包中只需使用zap.L()调用即可
+//	return
+//}
+//
+//func getEncoder() zapcore.Encoder {
+//	encoderConfig := zap.NewProductionEncoderConfig()
+//	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+//	encoderConfig.TimeKey = "time"
+//	encoderConfig.EncodeLevel = zapcore.CapitalLevelEncoder
+//	encoderConfig.EncodeDuration = zapcore.SecondsDurationEncoder
+//	encoderConfig.EncodeCaller = zapcore.ShortCallerEncoder
+//	return zapcore.NewJSONEncoder(encoderConfig)
+//}
+//
+//func getLogWriter(filename string, maxSize, maxBackup, maxAge int) zapcore.WriteSyncer {
+//	lumberJackLogger := &lumberjack.Logger{
+//		Filename:   filename,
+//		MaxSize:    maxSize,
+//		MaxBackups: maxBackup,
+//		MaxAge:     maxAge,
+//	}
+//	return zapcore.AddSync(lumberJackLogger)
+//}

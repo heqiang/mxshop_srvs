@@ -13,3 +13,4 @@ log:
 consul:
   host: "127.0.0.1"
   port: 8500
+  serverhost: "192.168.31.101"
