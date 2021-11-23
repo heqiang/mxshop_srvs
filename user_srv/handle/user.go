@@ -57,7 +57,6 @@ func (user *UserService) GetUserList(ctc context.Context, req *proto.PageInfo) (
 	rsp := &proto.UserListReponse{}
 	rsp.Total = int32(result.RowsAffected)
 	global.DB.Scopes(Paginate(int(req.Pn), int(req.PSize))).Find(&users)
-
 	for _, user := range users {
 		userinfoRsp := ModelToResponse(user)
 		rsp.Data = append(rsp.Data, userinfoRsp)

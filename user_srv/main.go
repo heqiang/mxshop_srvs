@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	consulapi "github.com/hashicorp/consul/api"
+	"github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
@@ -15,6 +16,9 @@ import (
 	"mxshop_srvs/user_srv/proto"
 	"mxshop_srvs/user_srv/utils"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -49,8 +53,9 @@ func main() {
 	}
 
 	registeration := &consulapi.AgentServiceRegistration{
-		Name:    global.ServerConfig.Name,
-		ID:      global.ServerConfig.Name,
+		Name: global.ServerConfig.Name,
+		//ID:      global.ServerConfig.Name,
+		ID:      fmt.Sprintf("%s", uuid.NewV4()),
 		Port:    *Port,
 		Tags:    []string{"hq", "srv"},
 		Address: global.ServerConfig.ConsulConfig.ServerHost,
@@ -66,9 +71,19 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	err = g.Serve(server)
-	if err != nil {
-		return
-	}
 
+	go func() {
+		err = g.Serve(server)
+		if err != nil {
+			return
+		}
+	}()
+	//终止信息的接受
+	quit := make(chan os.Signal)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	if err := client.Agent().ServiceDeregister(registeration.ID); err != nil {
+		zap.L().Info("服务注销失败")
+	}
+	zap.L().Info("注销成功")
 }
